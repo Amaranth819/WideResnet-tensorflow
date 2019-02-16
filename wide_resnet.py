@@ -110,23 +110,26 @@ def build_wide_resnet(x, num_classes, N, k, block, prob = None):
     layers = []
 
     # conv1
-    conv1 = layer.bn_relu_conv(x, "conv1", channels[0], channels[1], 3)
+    # conv1 = layer.bn_relu_conv(x, "conv1", channels[0], channels[1], 3)
+    conv1 = layer.conv_bn_relu(x, "conv1", channels[0], channels[1], 3)
     layers.append(conv1)
 
     # conv2
     # 1st
     before20 = tf.identity(layers[-1])
     conv20 = layer.conv_layer(before20, "conv20", [3, 3, channels[1], channels[2]])
-    conv20b = block(before20, "conv20b", prob, channels[1], channels[2]) if block is dropout else block(before20, "conv20b", channels[1], channels[2])
+    # conv20b = block(before20, "conv20b", prob, channels[1], channels[2]) if block is dropout else block(before20, "conv20b", channels[1], channels[2])
+    conv20b_ = layer.conv_bn_relu(before20, "conv20b_", channels[1], channels[2], 3)
+    conv20b = layer.conv_layer(conv20b_, "conv20b", [3, 3, channels[2], channels[2]])
     output20 = layer.bn_relu(conv20 + conv20b, "output20")
     layers.append(output20)
 
     # others
     for n in range(1, N):
         before2n = tf.identity(layers[-1])
-        conv2n = layer.conv_layer(before2n, "conv2%d" % n, [3, 3, channels[2], channels[2]])
+        # conv2n = layer.conv_layer(before2n, "conv2%d" % n, [3, 3, channels[2], channels[2]])
         conv2nb = block(before2n, "conv2%db" % n, prob, channels[2], channels[2]) if block is dropout else block(before2n, "conv2%db" % n, channels[2], channels[2])
-        output2n = layer.bn_relu(conv2n + conv2nb, "output2%d" % n)
+        output2n = layer.bn_relu(before2n + conv2nb, "output2%d" % n)
         layers.append(output2n)
 
     # downsampling0
@@ -137,16 +140,18 @@ def build_wide_resnet(x, num_classes, N, k, block, prob = None):
     # 1st
     before30 = tf.identity(layers[-1])
     conv30 = layer.conv_layer(before30, "conv30", [3, 3, channels[2], channels[3]])
-    conv30b = block(before30, "conv30b", prob, channels[2], channels[3]) if block is dropout else block(before30, "conv30b", channels[2], channels[3])
+    # conv30b = block(before30, "conv30b", prob, channels[2], channels[3]) if block is dropout else block(before30, "conv30b", channels[2], channels[3])
+    conv30b_ = layer.conv_bn_relu(before30, "conv30b_", channels[2], channels[3], 3)
+    conv30b = layer.conv_layer(conv30b_, "conv30b", [3, 3, channels[3], channels[3]])
     output30 = layer.bn_relu(conv30 + conv30b, "output30")
     layers.append(output30)
 
     # others
     for n in range(1, N):
         before3n = tf.identity(layers[-1])
-        conv3n = layer.conv_layer(before3n, "conv3%d" % n, [3, 3, channels[3], channels[3]])
+        # conv3n = layer.conv_layer(before3n, "conv3%d" % n, [3, 3, channels[3], channels[3]])
         conv3nb = block(before3n, "conv3%db" % n, prob, channels[3], channels[3]) if block is dropout else block(before3n, "conv3%db" % n, channels[3], channels[3])
-        output3n = layer.bn_relu(conv3n + conv3nb, "output3%d" % n)
+        output3n = layer.bn_relu(before3n + conv3nb, "output3%d" % n)
         layers.append(output3n)
 
     # downsampling1
@@ -157,16 +162,18 @@ def build_wide_resnet(x, num_classes, N, k, block, prob = None):
     # 1st
     before40 = tf.identity(layers[-1])
     conv40 = layer.conv_layer(before40, "conv40", [3, 3, channels[3],channels[4]])
-    conv40b = block(before40, "conv40b", prob, channels[3], channels[4]) if block is dropout else block(before40, "conv40b", channels[3], channels[4])
+    # conv40b = block(before40, "conv40b", prob, channels[3], channels[4]) if block is dropout else block(before40, "conv40b", channels[3], channels[4])
+    conv40b_ = layer.conv_bn_relu(before40, "conv40b_", channels[3], channels[4], 3)
+    conv40b = layer.conv_layer(conv40b_, "conv40b", [3, 3, channels[4], channels[4]])
     output40 = layer.bn_relu(conv40 + conv40b, "output40")
     layers.append(output40)
 
     # others
     for n in range(1, N):
         before4n = tf.identity(layers[-1])
-        conv4n = layer.conv_layer(before4n, "conv4%d" % n, [3, 3, channels[4], channels[4]])
+        # conv4n = layer.conv_layer(before4n, "conv4%d" % n, [3, 3, channels[4], channels[4]])
         conv4nb = block(before4n, "conv4%db" % n, prob, channels[4], channels[4]) if block is dropout else block(before4n, "conv4%db" % n, channels[4], channels[4])
-        output4n = layer.bn_relu(conv4n + conv4nb, "output4%d" % n)
+        output4n = layer.bn_relu(before4n + conv4nb, "output4%d" % n)
         layers.append(output4n)
 
     # avg pooling

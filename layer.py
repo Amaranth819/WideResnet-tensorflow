@@ -62,11 +62,11 @@ def bn_relu_conv(x, name, in_channel, out_channel, conv_size):
 	conv_out = conv_layer(relu_out, filt_shape = [conv_size, conv_size, in_channel, out_channel], name = name + "_conv")
 	return conv_out
 
-# def conv_bn_relu(x, name, in_channel, out_channel, conv_size):
-# 	conv_out = conv_layer(x, filt_shape = [conv_size, conv_size, in_channel, out_channel], name = name + "_conv")
-# 	bn_out = batch_normalization(conv_out, name + "_bn")
-# 	relu_out = relu_layer(bn_out)
-# 	return relu_out
+def conv_bn_relu(x, name, in_channel, out_channel, conv_size):
+	conv_out = conv_layer(x, filt_shape = [conv_size, conv_size, in_channel, out_channel], name = name + "_conv")
+	bn_out = batch_normalization(conv_out, name + "_bn")
+	relu_out = relu_layer(bn_out)
+	return relu_out
 
 def bn_relu(x, name):
 	bn_out = batch_normalization(x, name + "_bn")

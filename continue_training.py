@@ -68,6 +68,6 @@ continue_training(
         log_path = config.log_dir,
         input_name = "input:0",
         gt_name = "gt:0",
-        epoch = 20000,
+        epoch = 30000,
         bs = config.batch_size,
         save_model_step = config.save_model_step)

@@ -35,14 +35,24 @@ class Train(object):
 		tf.summary.scalar("loss", loss)
 		return loss
 
+	def evaluate(self, logits, labels, rank):
+		correct = tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 1))
+		accuracy = tf.reduce_mean(tf.cast(correct, tf.float32), name = "accuracy")
+		tf.summary.scalar("accuracy", accuracy)
+		return accuracy
+
 	def train(self):
 		sess = tf.Session()
 
 		# wrn.basic, wrn.bottle_neck, wrn.basic_wide, wrn.dropout
-		pred = wrn.build_wide_resnet(self.input, self.num_classes, self.N, self.k, wrn.dropout, prob = 0.3)
-
+		pred = wrn.build_wide_resnet(self.input, self.num_classes, self.N, self.k, wrn.basic_wide, prob = 0.3)
 		loss = self.loss_func(pred, self.gt)
-		optimizer = tf.train.AdamOptimizer(learning_rate = self.learning_rate, name = "adam_optimizer").minimize(loss, global_step = self.global_step, name = "adam_minimizer")
+		evaluation = self.evaluate(logits = pred, labels = self.gt, rank = 1)
+		# optimizer = tf.train.AdamOptimizer(learning_rate = self.learning_rate, name = "adam_optimizer").minimize(loss, global_step = self.global_step, name = "adam_minimizer")
+		# weight decay is 0.0005
+		optimizer_with_weight_decay = tf.contrib.opt.extend_with_decoupled_weight_decay(tf.train.MomentumOptimizer)
+		optimizer = optimizer_with_weight_decay(weight_decay = 0.0005, learning_rate = self.learning_rate, momentum = 0.9).minimize(loss, global_step = self.global_step, name = "momentum_minimizer")
+		# optimizer = tf.train.MomentumOptimizer(learning_rate = self.learning_rate, momentum = 0.9, name = "momentum_optimizer").minimize(loss, global_step = self.global_step, name = "momentum_minimizer")
 
 		sess.run(tf.global_variables_initializer())
 
@@ -70,11 +80,11 @@ class Train(object):
 			if len(batch[1]) != self.bs:
 				continue
 
-			summary, gs, l, lr, _ = sess.run([merged, self.global_step, loss, self.learning_rate, optimizer],
+			summary, gs, l, eva, lr, _ = sess.run([merged, self.global_step, loss, evaluation, self.learning_rate, optimizer],
 				feed_dict = {self.input : batch[0], self.gt : batch[1]})
 
 			train_writer.add_summary(summary, gs)
-			print "Global steps %d -- loss = %.6f, lr = %.9f" % (gs, l, lr)
+			print "Global steps %d -- loss = %.6f, lr = %.9f, acc = %.6f" % (gs, l, lr, eva)
 
 			if gs % self.save_model_step == 0:
 				saver.save(sess, self.model_dir, global_step = self.save_model_step)
