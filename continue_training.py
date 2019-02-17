@@ -24,7 +24,8 @@ def continue_training(dataset_path, model_path, graph_path, ckpt_path, log_path,
     loss = graph.get_tensor_by_name("loss:0")
     global_steps = graph.get_tensor_by_name("global_step:0")
     learning_rate = graph.get_tensor_by_name("learning_rate:0")
-    optimizer = graph.get_tensor_by_name("adam_minimizer:0")
+    accuracy = graph.get_tensor_by_name("accuracy:0")
+    optimizer = graph.get_tensor_by_name("momentum_minimizer:0")
     
     # dataset
     data = []
@@ -46,11 +47,10 @@ def continue_training(dataset_path, model_path, graph_path, ckpt_path, log_path,
         if len(batch[1]) != bs:
             continue
         
-        summary, gs, l, lr, _ = sess.run([merged, global_steps, loss, learning_rate, optimizer],
-				feed_dict = {x : batch[0], gt : batch[1]})
+        summary, gs, l, lr, acc, _ = sess.run([merged, global_steps, loss, learning_rate, accuracy, optimizer], feed_dict = {x : batch[0], gt : batch[1]})
         train_writer.add_summary(summary, gs)
         
-        print "Global steps %d -- loss = %.6f, lr = %.9f" % (gs, l, lr)
+        print "Global steps %d -- loss = %.6f, lr = %.9f, acc = %.6f" % (gs, l, lr, acc)
         
         if gs % save_model_step == 0:
             saver.save(sess, model_path, global_step = save_model_step)
@@ -68,6 +68,6 @@ continue_training(
         log_path = config.log_dir,
         input_name = "input:0",
         gt_name = "gt:0",
-        epoch = 30000,
+        epoch = 20000,
         bs = config.batch_size,
         save_model_step = config.save_model_step)

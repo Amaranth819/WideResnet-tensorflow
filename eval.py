@@ -3,10 +3,10 @@ import numpy as np
 import config
 import cifar
 
-def evaluate(logits, labels, rank):
-    correct = tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 1))
-    accuracy = tf.reduce_mean(tf.cast(correct, tf.float32), name = "accuracy")
-    return accuracy
+# def evaluate(logits, labels, rank):
+#     correct = tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 1))
+#     accuracy = tf.reduce_mean(tf.cast(correct, tf.float32), name = "accuracy")
+#     return accuracy
 
 def test_error(graph_path, ckpt_path, test_data_path, input_name, gt_name, pred_name, bs):
     # prepare for testing dataset
@@ -23,7 +23,7 @@ def test_error(graph_path, ckpt_path, test_data_path, input_name, gt_name, pred_
         x = graph.get_tensor_by_name(input_name)
         gt = graph.get_tensor_by_name(gt_name)
         pred = graph.get_tensor_by_name(pred_name)
-        accuracy = evaluate(pred, gt, 1)
+        accuracy = graph.get_tensor_by_name("accuracy:0")
         a = []
         
         b = 1
