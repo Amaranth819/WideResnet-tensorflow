@@ -16,6 +16,8 @@ class Train(object):
 		self.N = N
 		self.num_classes = num_classes
 		self.bs = bs
+		self.dropout = tf.placeholder(tf.float32, name = "dropout")
+		self.weight_decay = tf.placeholder(tf.float32, name = "weight_decay")
 
 		# learning rate
 		self.init_lr = init_lr
@@ -45,13 +47,13 @@ class Train(object):
 		sess = tf.Session()
 
 		# wrn.basic, wrn.bottle_neck, wrn.basic_wide, wrn.dropout
-		pred = wrn.build_wide_resnet(self.input, self.num_classes, self.N, self.k, wrn.basic_wide, prob = 0.3)
+		pred = wrn.build_wide_resnet(self.input, self.num_classes, self.N, self.k, wrn.basic_wide, prob = self.dropout)
 		loss = self.loss_func(pred, self.gt)
 		evaluation = self.evaluate(logits = pred, labels = self.gt, rank = 1)
 		# optimizer = tf.train.AdamOptimizer(learning_rate = self.learning_rate, name = "adam_optimizer").minimize(loss, global_step = self.global_step, name = "adam_minimizer")
 		# weight decay is 0.0005
 		optimizer_with_weight_decay = tf.contrib.opt.extend_with_decoupled_weight_decay(tf.train.MomentumOptimizer)
-		optimizer = optimizer_with_weight_decay(weight_decay = 0.0005, learning_rate = self.learning_rate, momentum = 0.9).minimize(loss, global_step = self.global_step, name = "momentum_minimizer")
+		optimizer = optimizer_with_weight_decay(weight_decay = self.weight_decay, learning_rate = self.learning_rate, momentum = 0.9).minimize(loss, global_step = self.global_step, name = "momentum_minimizer")
 		# optimizer = tf.train.MomentumOptimizer(learning_rate = self.learning_rate, momentum = 0.9, name = "momentum_optimizer").minimize(loss, global_step = self.global_step, name = "momentum_minimizer")
 
 		sess.run(tf.global_variables_initializer())
@@ -74,6 +76,8 @@ class Train(object):
 		dataset = cifar.create_dataset(data, label, self.bs)
 		batch_tensor = cifar.get_next(dataset)
 
+		print np.sum([np.prod(v.get_shape().as_list()) for v in tf.trainable_variables()])
+
 		i = 0
 		while i < self.epoch:
 			batch = sess.run(batch_tensor)
@@ -81,7 +85,7 @@ class Train(object):
 				continue
 
 			summary, gs, l, eva, lr, _ = sess.run([merged, self.global_step, loss, evaluation, self.learning_rate, optimizer],
-				feed_dict = {self.input : batch[0], self.gt : batch[1]})
+				feed_dict = {self.input : batch[0], self.gt : batch[1], self.dropout : 0.3, self.weight_decay : 0.0005})
 
 			train_writer.add_summary(summary, gs)
 			print "Global steps %d -- loss = %.6f, lr = %.9f, acc = %.6f" % (gs, l, lr, eva)

@@ -116,7 +116,7 @@ def build_wide_resnet(x, num_classes, N, k, block, prob = None):
 
     # conv2
     # 1st
-    before20 = tf.identity(layers[-1])
+    before20 = layers[-1]
     conv20 = layer.conv_layer(before20, "conv20", [3, 3, channels[1], channels[2]])
     # conv20b = block(before20, "conv20b", prob, channels[1], channels[2]) if block is dropout else block(before20, "conv20b", channels[1], channels[2])
     conv20b_ = layer.conv_bn_relu(before20, "conv20b_", channels[1], channels[2], 3)
@@ -128,17 +128,18 @@ def build_wide_resnet(x, num_classes, N, k, block, prob = None):
     for n in range(1, N):
         before2n = tf.identity(layers[-1])
         # conv2n = layer.conv_layer(before2n, "conv2%d" % n, [3, 3, channels[2], channels[2]])
-        conv2nb = block(before2n, "conv2%db" % n, prob, channels[2], channels[2]) if block is dropout else block(before2n, "conv2%db" % n, channels[2], channels[2])
+        conv2nb = block(layers[-1], "conv2%db" % n, prob, channels[2], channels[2]) if block is dropout else block(layers[-1], "conv2%db" % n, channels[2], channels[2])
         output2n = layer.bn_relu(before2n + conv2nb, "output2%d" % n)
         layers.append(output2n)
 
     # downsampling0
-    downsampling0 = layer.avg_pool_layer(layers[-1], "downsampling0", [1, 2, 2, 1])
+    #downsampling0 = layer.avg_pool_layer(layers[-1], "downsampling0", [1, 2, 2, 1])
+    downsampling0 = layer.max_pool_layer(layers[-1], "downsampling0", [1, 2, 2, 1])
     layers.append(downsampling0)
 
     # conv3
     # 1st
-    before30 = tf.identity(layers[-1])
+    before30 = layers[-1]
     conv30 = layer.conv_layer(before30, "conv30", [3, 3, channels[2], channels[3]])
     # conv30b = block(before30, "conv30b", prob, channels[2], channels[3]) if block is dropout else block(before30, "conv30b", channels[2], channels[3])
     conv30b_ = layer.conv_bn_relu(before30, "conv30b_", channels[2], channels[3], 3)
@@ -150,17 +151,18 @@ def build_wide_resnet(x, num_classes, N, k, block, prob = None):
     for n in range(1, N):
         before3n = tf.identity(layers[-1])
         # conv3n = layer.conv_layer(before3n, "conv3%d" % n, [3, 3, channels[3], channels[3]])
-        conv3nb = block(before3n, "conv3%db" % n, prob, channels[3], channels[3]) if block is dropout else block(before3n, "conv3%db" % n, channels[3], channels[3])
+        conv3nb = block(layers[-1], "conv3%db" % n, prob, channels[3], channels[3]) if block is dropout else block(layers[-1], "conv3%db" % n, channels[3], channels[3])
         output3n = layer.bn_relu(before3n + conv3nb, "output3%d" % n)
         layers.append(output3n)
 
     # downsampling1
-    downsampling1 = layer.avg_pool_layer(layers[-1], "downsampling1", [1, 2, 2, 1])
+    #downsampling1 = layer.avg_pool_layer(layers[-1], "downsampling1", [1, 2, 2, 1])
+    downsampling1 = layer.max_pool_layer(layers[-1], "downsampling1", [1, 2, 2, 1])
     layers.append(downsampling1)
 
     # conv4
     # 1st
-    before40 = tf.identity(layers[-1])
+    before40 = layers[-1]
     conv40 = layer.conv_layer(before40, "conv40", [3, 3, channels[3],channels[4]])
     # conv40b = block(before40, "conv40b", prob, channels[3], channels[4]) if block is dropout else block(before40, "conv40b", channels[3], channels[4])
     conv40b_ = layer.conv_bn_relu(before40, "conv40b_", channels[3], channels[4], 3)
@@ -172,28 +174,32 @@ def build_wide_resnet(x, num_classes, N, k, block, prob = None):
     for n in range(1, N):
         before4n = tf.identity(layers[-1])
         # conv4n = layer.conv_layer(before4n, "conv4%d" % n, [3, 3, channels[4], channels[4]])
-        conv4nb = block(before4n, "conv4%db" % n, prob, channels[4], channels[4]) if block is dropout else block(before4n, "conv4%db" % n, channels[4], channels[4])
+        conv4nb = block(layers[-1], "conv4%db" % n, prob, channels[4], channels[4]) if block is dropout else block(layers[-1], "conv4%db" % n, channels[4], channels[4])
         output4n = layer.bn_relu(before4n + conv4nb, "output4%d" % n)
         layers.append(output4n)
 
     # avg pooling
-    avg_pool = layer.avg_pool_layer(tf.identity(layers[-1]), name = "avg_pool", pooling_size = [1, 8, 8, 1])
+    avg_pool = layer.avg_pool_layer(layers[-1], name = "avg_pool", pooling_size = [1, 8, 8, 1])
     layers.append(avg_pool)
 
     # flatten and fully connected
     flatten = layer.flatten_layer(layers[-1])
-    fc = layer.fc_layer(flatten, num_classes, "prediction")
+    fc = layer.fc_layer(flatten, num_classes, "fc")
     layers.append(fc)
+    
+    sm = tf.nn.softmax(layers[-1], name = "prediction")
+    layers.append(sm)
 
     return layers[-1]
 
 def test_wide_resnet():
-	y = np.random.random((4, 32, 32, 3))
-	x = tf.constant(y, dtype = tf.float32)
-	pred = build_wide_resnet(x, 10, 2, 2, basic)
-	sess = tf.Session()
-	sess.run(tf.global_variables_initializer())
-	print "OK!"
-	print pred
+    y = np.random.random((128, 32, 32, 3))
+    x = tf.constant(y, dtype = tf.float32)
+    pred = build_wide_resnet(x, 10, 4, 10, basic)
+    sess = tf.Session()
+    print np.sum([np.prod(v.get_shape().as_list()) for v in tf.trainable_variables()])
+    sess.run(tf.global_variables_initializer())
+    print "OK!"
+    print pred
 
 # test_wide_resnet()

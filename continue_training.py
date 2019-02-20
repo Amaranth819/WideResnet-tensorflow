@@ -10,7 +10,7 @@ import numpy as np
 import cifar
 import config
 
-def continue_training(dataset_path, model_path, graph_path, ckpt_path, log_path, input_name, gt_name, epoch, bs, save_model_step):
+def continue_training(dataset_path, model_path, graph_path, ckpt_path, log_path, input_name, gt_name, epoch, bs, save_model_step, dropout):
     sess = tf.Session()
     saver = tf.train.import_meta_graph(graph_path)
     saver.restore(sess, tf.train.latest_checkpoint(ckpt_path))
@@ -26,6 +26,8 @@ def continue_training(dataset_path, model_path, graph_path, ckpt_path, log_path,
     learning_rate = graph.get_tensor_by_name("learning_rate:0")
     accuracy = graph.get_tensor_by_name("accuracy:0")
     optimizer = graph.get_tensor_by_name("momentum_minimizer:0")
+    dp = graph.get_tensor_by_name("dropout:0")
+    weight_decay = graph.get_tensor_by_name("weight_decay:0")
     
     # dataset
     data = []
@@ -47,7 +49,7 @@ def continue_training(dataset_path, model_path, graph_path, ckpt_path, log_path,
         if len(batch[1]) != bs:
             continue
         
-        summary, gs, l, lr, acc, _ = sess.run([merged, global_steps, loss, learning_rate, accuracy, optimizer], feed_dict = {x : batch[0], gt : batch[1]})
+        summary, gs, l, lr, acc, _ = sess.run([merged, global_steps, loss, learning_rate, accuracy, optimizer], feed_dict = {x : batch[0], gt : batch[1], dp : dropout, weight_decay : 0.0005})
         train_writer.add_summary(summary, gs)
         
         print "Global steps %d -- loss = %.6f, lr = %.9f, acc = %.6f" % (gs, l, lr, acc)
@@ -68,6 +70,6 @@ continue_training(
         log_path = config.log_dir,
         input_name = "input:0",
         gt_name = "gt:0",
-        epoch = 20000,
+        epoch = 60000,
         bs = config.batch_size,
-        save_model_step = config.save_model_step)
+        save_model_step = config.save_model_step, dropout = 0.3)

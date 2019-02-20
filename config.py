@@ -4,13 +4,13 @@ image_size = [32, 32, 3]
 num_classes = 10
 input_size = [batch_size] + image_size
 output_size = [batch_size, num_classes]
-k = 2
-N = 6
+k = 1
+N = 2
 
 # training
 init_lr = 0.1
 lr_decay_rate = 0.2
-lr_decay_step = 20000
+lr_decay_step = 15000
 
 epoch = 20000
 save_model_step = 1000

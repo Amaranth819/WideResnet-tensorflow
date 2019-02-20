@@ -24,6 +24,8 @@ def test_error(graph_path, ckpt_path, test_data_path, input_name, gt_name, pred_
         gt = graph.get_tensor_by_name(gt_name)
         pred = graph.get_tensor_by_name(pred_name)
         accuracy = graph.get_tensor_by_name("accuracy:0")
+        dropout = graph.get_tensor_by_name("dropout:0")
+        weight_decay = graph.get_tensor_by_name("weight_decay:0")
         a = []
         
         b = 1
@@ -32,7 +34,7 @@ def test_error(graph_path, ckpt_path, test_data_path, input_name, gt_name, pred_
                 batch = sess.run(batch_tensor)
                 if len(batch[1]) != bs:
                     break
-                acc = sess.run([accuracy], feed_dict = {x : batch[0], gt : batch[1]})
+                acc = sess.run([accuracy], feed_dict = {x : batch[0], gt : batch[1], dropout : 1.0, weight_decay : 1.0})
                 a += acc
                 print "The average accuracy of the %d batch is %.6f." % (b, np.mean(acc))
                 b += 1

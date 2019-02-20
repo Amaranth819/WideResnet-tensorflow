@@ -26,8 +26,19 @@ def create_dataset(data, label, bs, repeat_size = None):
 
 def map_batch(data_batch, label_batch):
     data = tf.reshape(data_batch, config.image_size)
+    data_aug = data_augmentation(data)
     label = tf.one_hot(label_batch, config.num_classes)
     return data, label
+
+def data_augmentation(img):
+    tf.set_random_seed(233)
+    fliplr = tf.image.random_flip_left_right(img)
+    fliptb = tf.image.random_flip_up_down(fliplr)
+    offset_height = np.random.randint(5)
+    offset_width = np.random.randint(5)
+    translation = tf.image.pad_to_bounding_box(fliptb, offset_height, offset_width, 32 + offset_height, 32 + offset_width)
+    output = tf.image.crop_to_bounding_box(translation, 0, 0, 32, 32)
+    return output
 
 def get_next(dataset):
     iterator = dataset.make_one_shot_iterator()
