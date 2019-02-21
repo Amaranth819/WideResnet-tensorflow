@@ -1,16 +1,17 @@
 # data parameters
 batch_size = 128
 image_size = [32, 32, 3]
+ori_size = [3, 32, 32]
 num_classes = 10
 input_size = [batch_size] + image_size
 output_size = [batch_size, num_classes]
-k = 1
+k = 2
 N = 2
 
 # training
 init_lr = 0.1
 lr_decay_rate = 0.2
-lr_decay_step = 15000
+lr_decay_step = 10000
 
 epoch = 20000
 save_model_step = 1000

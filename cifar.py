@@ -25,8 +25,9 @@ def create_dataset(data, label, bs, repeat_size = None):
 
 
 def map_batch(data_batch, label_batch):
-    data = tf.reshape(data_batch, config.image_size)
-    data_aug = data_augmentation(data)
+    # data = tf.reshape(data_batch, config.image_size)
+    # data_aug = data_augmentation(data)
+    data = tf.transpose(tf.reshape(data_batch, config.ori_size), [1, 2, 0])
     label = tf.one_hot(label_batch, config.num_classes)
     return data, label
 
