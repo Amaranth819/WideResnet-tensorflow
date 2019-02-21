@@ -117,7 +117,7 @@ def build_wide_resnet(x, num_classes, N, k, block, prob = None):
     # conv2
     # 1st
     before20 = layers[-1]
-    conv20 = layer.conv_layer(before20, "conv20", [3, 3, channels[1], channels[2]])
+    conv20 = layer.conv_layer(before20, "conv20", [1, 1, channels[1], channels[2]])
     # conv20b = block(before20, "conv20b", prob, channels[1], channels[2]) if block is dropout else block(before20, "conv20b", channels[1], channels[2])
     conv20b_ = layer.conv_bn_relu(before20, "conv20b_", channels[1], channels[2], 3)
     conv20b = layer.conv_layer(conv20b_, "conv20b", [3, 3, channels[2], channels[2]])
@@ -140,7 +140,7 @@ def build_wide_resnet(x, num_classes, N, k, block, prob = None):
     # conv3
     # 1st
     before30 = layers[-1]
-    conv30 = layer.conv_layer(before30, "conv30", [3, 3, channels[2], channels[3]])
+    conv30 = layer.conv_layer(before30, "conv30", [1, 1, channels[2], channels[3]])
     # conv30b = block(before30, "conv30b", prob, channels[2], channels[3]) if block is dropout else block(before30, "conv30b", channels[2], channels[3])
     conv30b_ = layer.conv_bn_relu(before30, "conv30b_", channels[2], channels[3], 3)
     conv30b = layer.conv_layer(conv30b_, "conv30b", [3, 3, channels[3], channels[3]])
@@ -163,7 +163,7 @@ def build_wide_resnet(x, num_classes, N, k, block, prob = None):
     # conv4
     # 1st
     before40 = layers[-1]
-    conv40 = layer.conv_layer(before40, "conv40", [3, 3, channels[3],channels[4]])
+    conv40 = layer.conv_layer(before40, "conv40", [1, 1, channels[3],channels[4]])
     # conv40b = block(before40, "conv40b", prob, channels[3], channels[4]) if block is dropout else block(before40, "conv40b", channels[3], channels[4])
     conv40b_ = layer.conv_bn_relu(before40, "conv40b_", channels[3], channels[4], 3)
     conv40b = layer.conv_layer(conv40b_, "conv40b", [3, 3, channels[4], channels[4]])
